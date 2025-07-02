@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Available Job Offers</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+    <style>
+        /* Add any specific styles for this page here */
+        .job-offers-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="job-offers-container">
+            <h1 class="mb-4">Available Job Offers</h1>
+            <div id="job-offers-list" class="row row-cols-1 g-3">
+                <!-- Job offers will be loaded here by JavaScript -->
+                 <div class="loading-spinner">
+                     <i class="bi bi-arrow-repeat"></i>
+                     <span class="ms-2">Chargement des offres d'emploi...</span>
+                 </div>
+            </div>
+             <div id="job-offers-empty" class="empty-state hidden">
+                 <i class="bi bi-emoji-frown"></i>
+                 <p>Aucune offre d'emploi disponible pour le moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth.js}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const jobOffersList = document.getElementById('job-offers-list');
+                const jobOffersEmpty = document.getElementById('job-offers-empty');
+                
+                // Function to fetch and display all available job offers
+                async function fetchAndDisplayJobOffers() {
+                    // Show loading spinner initially
+                    jobOffersList.innerHTML = `
+                        <div class="loading-spinner">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span class="ms-2">Chargement des offres d'emploi...</span>
+                        </div>
+                    `;
+                    jobOffersList.classList.add('loading-spinner');
+                    jobOffersList.classList.remove('hidden');
+                    jobOffersEmpty.classList.add('hidden');
+
+                    try {
+                        let jobOffers = []; // Declare and initialize jobOffers here
+                        
+                        // Using fetchWithAuth from auth.js (assuming this endpoint requires auth)
+                        const response = await auth.fetchWithAuth('/api/job-offers/public');
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        console.log('Fetched job offers data:', data);
+
+                        jobOffers = data.data; // Direct assignment
+
+                        // Ensure jobOffers is always an array before proceeding
+                        if (!Array.isArray(jobOffers)) {
+                            console.warn('jobOffers is not an array after assignment, initializing as empty.', jobOffers);
+                            jobOffers = [];
+                        }
+
+                        jobOffersList.innerHTML = ''; // Clear loading spinner
+                        debugger;
+                        if (jobOffers.length > 0) {
+                            let html = '';
+                            jobOffers.forEach(job => {
+                                // Reuse the job card structure from dashboard if available
+                                // Adapt this based on the exact structure you want
+                                html += `
+                                    <div class="col">
+                                        <div class="card h-100 job-card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">${job.title}</h5>
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-building me-1"></i> ${job.company ? job.company.name : 'Entreprise non spécifiée'}
+                                                </p>
+                                                <p class="card-text text-muted mb-2">
+                                                    <i class="bi bi-geo-alt me-1"></i> ${job.location || 'Non spécifié'}
+                                                </p>
+                                                <div>
+                                                    <span class="job-badge">${job.contractType || 'Non spécifié'}</span>
+                                                     ${job.salary ? `<span class="job-badge">${job.salary}€</span>` : ''}
+                                                </div>
+                                                <a href="/view-job-offer.html?id=${job.id}" class="btn btn-primary btn-sm mt-3">
+                                                    <i class="bi bi-eye me-1"></i> Voir l'offre
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            jobOffersList.innerHTML = html;
+                             jobOffersList.classList.remove('hidden');
+                             jobOffersEmpty.classList.add('hidden');
+                             jobOffersList.classList.remove('loading-spinner');
+                        } else {
+                            jobOffersList.classList.add('hidden');
+                            jobOffersEmpty.classList.remove('hidden');
+                            jobOffersList.classList.remove('loading-spinner');
+                        }
+
+                    } catch (error) {
+                        console.error('Error fetching or displaying job offers:', error);
+                        jobOffersList.classList.add('hidden');
+                        jobOffersEmpty.classList.add('hidden');
+                        jobOffersList.classList.remove('loading-spinner');
+                        // Display a more robust error message
+                        let errorMessage = 'Failed to load job offers.';
+                        if (error instanceof Error) {
+                            errorMessage += ' ' + error.message;
+                        } else if (typeof error === 'string') {
+                             errorMessage += ' ' + error;
+                        } else {
+                            errorMessage += ' An unknown error occurred.';
+                        }
+                        jobOffersList.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i> ${errorMessage}
+                            </div>
+                        `;
+                        jobOffersList.classList.remove('hidden'); // Show the error message
+                    }
+                }
+
+                // Fetch job offers when the page loads
+                fetchAndDisplayJobOffers();
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

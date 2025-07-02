@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Candidatures pour l'offre</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Candidatures pour <span id="job-title"></span></h2>
+    <div id="applications-list">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+    </div>
+    <a href="/dashboard" class="btn btn-secondary mt-3">Retour au tableau de bord</a>
+</div>
+<script src="/js/auth.js"></script>
+<script>
+    // Get jobOfferId from Thymeleaf model as a string, fallback to '0' if null
+    const jobOfferId = '[[${jobOfferId} ?: 0]]';
+    if (!jobOfferId || jobOfferId === '0') {
+        document.getElementById('applications-list').innerHTML = '<div class="alert alert-danger">Aucune offre sélectionnée.</div>';
+    } else {
+        fetchApplicationsForJobOffer(jobOfferId);
+    }
+
+    function fetchApplicationsForJobOffer(jobOfferId) {
+        auth.fetchWithAuth(`/api/recruiter/job-offers/${jobOfferId}/applications`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.data)) {
+                    let html = '<table class="table"><thead><tr><th>Candidat</th><th>Email</th><th>CV</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+                    data.data.forEach(app => {
+                        html += `<tr>
+                            <td>${app.candidate ? app.candidate.firstName + ' ' + app.candidate.lastName : ''}</td>
+                            <td>${app.candidate ? app.candidate.email : ''}</td>
+                            <td>${app.candidate && app.candidate.cvPath ? `<a href="${app.candidate.cvPath}" target="_blank" download>Télécharger</a>` : 'Aucun CV'}</td>
+                            <td><span class="badge ${getStatusClass(app.status)}">${app.status}</span></td>
+                            <td>
+                                ${app.status === 'PENDING' ? `
+                                <button class="btn btn-success btn-sm" onclick="updateApplicationStatus(${app.id}, 'ACCEPTED')">Accepter</button>
+                                <button class="btn btn-danger btn-sm" onclick="updateApplicationStatus(${app.id}, 'REJECTED')">Rejeter</button>
+                                ` : ''}
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('applications-list').innerHTML = html;
+                    if (data.data.length > 0 && data.data[0].jobOffer && data.data[0].jobOffer.title) {
+                        document.getElementById('job-title').textContent = data.data[0].jobOffer.title;
+                    }
+                } else {
+                    document.getElementById('applications-list').innerHTML = '<div class="alert alert-warning">Aucune candidature trouvée.</div>';
+                }
+            });
+    }
+
+    function getStatusClass(status) {
+        switch(status) {
+            case 'PENDING': return 'bg-warning text-dark';
+            case 'ACCEPTED': return 'bg-success text-white';
+            case 'REJECTED': return 'bg-danger text-white';
+            default: return 'bg-secondary text-white';
+        }
+    }
+
+    window.updateApplicationStatus = function(applicationId, status) {
+        auth.fetchWithAuth(`/api/recruiter/applications/${applicationId}/status?status=${status}`, {
+            method: 'PUT',
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Statut mis à jour !');
+                fetchApplicationsForJobOffer(jobOfferId); // Refresh list
+            } else {
+                alert('Erreur : ' + (data.message || 'Impossible de changer le statut'));
+            }
+        });
+    }
+</script>
+</body>
+</html> 

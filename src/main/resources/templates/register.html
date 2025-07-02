@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Inscription</title>
+    <style>
+        /* Custom styles for the register page */
+        .auth-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center; /* Center content */
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlideUp 0.6s ease-out forwards;
+        }
+        .auth-icon {
+            font-size: 3rem;
+            color: #1a73e8; /* Google Blue */
+            margin-bottom: 1rem;
+        }
+        .auth-header h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+         .auth-header p {
+             color: #5f6368;
+             margin-bottom: 2rem;
+         }
+        .form-label {
+            font-weight: 500;
+            color: #5f6368;
+             display: flex; /* Align icon and label */
+             align-items: center;
+             margin-bottom: 0.5rem;
+        }
+         .form-label i {
+             margin-right: 8px;
+             color: #1a73e8;
+         }
+        .form-control, .form-select {
+            border-radius: 5px;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem; /* Add space below inputs */
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
+        }
+         .form-check {
+            text-align: left;
+             margin-bottom: 1.5rem;
+        }
+         .form-check-label {
+             color: #5f6368;
+         }
+        .btn-primary {
+            background-color: #28a745; /* Bootstrap Green */
+            border: none;
+            padding: 0.75rem;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            width: 100%; /* Full width button */
+             margin-top: 1rem;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+         .password-input-container {
+             position: relative;
+         }
+         .password-toggle-icon {
+             position: absolute;
+             top: 50%;
+             right: 10px;
+             transform: translateY(-50%);
+             cursor: pointer;
+             color: #5f6368;
+         }
+        .error-message {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #5f6368;
+        }
+        .auth-footer a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animation Keyframes (if not already in base.html) */
+        @keyframes fadeInSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="auth-container">
+            <i class="bi bi-person-plus auth-icon"></i>
+            <div class="auth-header">
+                <h2>Inscription</h2>
+                <p>Rejoignez LinkedOut dès aujourd'hui</p>
+            </div>
+            <div id="register-error-message" class="error-message" role="alert" aria-live="polite" style="display: none;"></div>
+            <form id="register-form" novalidate>
+                 <div class="mb-3">
+                     <label for="role" class="form-label"><i class="bi bi-person"></i> Type de compte</label>
+                     <select class="form-select" id="role" name="role" 
+                             required aria-required="true">
+                         <option value="">Sélectionnez votre profil</option>
+                         <option value="CANDIDATE">Candidat</option>
+                         <option value="RECRUITER">Recruteur</option>
+                     </select>
+                 </div>
+                 <div class="mb-3">
+                     <label for="firstName" class="form-label"><i class="bi bi-person"></i> Prénom</label>
+                     <input type="text" class="form-control" id="firstName" name="firstName" 
+                            required aria-required="true"
+                            placeholder="Entrez votre prénom"
+                            autocomplete="given-name">
+                 </div>
+                 <div class="mb-3">
+                     <label for="lastName" class="form-label"><i class="bi bi-person"></i> Nom</label>
+                     <input type="text" class="form-control" id="lastName" name="lastName" 
+                            required aria-required="true"
+                            placeholder="Entrez votre nom"
+                            autocomplete="family-name">
+                 </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label"><i class="bi bi-envelope"></i> Email</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           required aria-required="true"
+                           placeholder="Entrez votre email"
+                           autocomplete="email">
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label"><i class="bi bi-telephone"></i> Téléphone</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" 
+                           required aria-required="true"
+                           placeholder="Entrez votre numéro de téléphone"
+                           autocomplete="tel">
+                </div>
+                <div class="mb-3 password-input-container">
+                    <label for="password" class="form-label"><i class="bi bi-lock"></i> Mot de passe</label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           required aria-required="true"
+                           placeholder="Créez un mot de passe"
+                           autocomplete="new-password">
+                     <i class="bi bi-eye-slash password-toggle-icon"></i>
+                </div>
+                 <div class="mb-3 password-input-container">
+                    <label for="confirmPassword" class="form-label"><i class="bi bi-lock"></i> Confirmer le mot de passe</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                           required aria-required="true"
+                           placeholder="Confirmez votre mot de passe"
+                           autocomplete="new-password">
+                      <i class="bi bi-eye-slash password-toggle-icon"></i>
+                </div>
+                 <div class="form-check mb-3">
+                     <input class="form-check-input" type="checkbox" id="acceptTerms" required>
+                     <label class="form-check-label" for="acceptTerms">
+                         J'accepte les conditions d'utilisation
+                     </label>
+                 </div>
+                <button type="submit" class="btn btn-primary" aria-label="S'inscrire">
+                    <i class="bi bi-person-plus me-1"></i> S'inscrire
+                </button>
+            </form>
+            <div class="auth-footer">
+                <p>Déjà inscrit ? <a th:href="@{/login}" aria-label="Se connecter">Se connecter</a></p>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth.js}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const registerForm = document.getElementById('register-form');
+                const errorMessage = document.getElementById('register-error-message');
+
+                registerForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    errorMessage.style.display = 'none';
+
+                    // Validate form
+                    if (!validateForm()) {
+                        return false;
+                    }
+
+                    // Get form data and convert to JSON
+                    const formData = {
+                        firstName: document.getElementById('firstName').value,
+                        lastName: document.getElementById('lastName').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        password: document.getElementById('password').value,
+                        role: document.getElementById('role').value
+                    };
+
+                    // Send as JSON
+                    fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || "L'inscription a échoué");
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Registration successful:', data);
+                        // Store token if provided
+                        if (data.token) {
+                            auth.setToken(data.token);
+                        }
+                        // Redirect to login page or dashboard
+                        window.location.href = '/login';
+                    })
+                    .catch(error => {
+                        console.error('Registration error:', error);
+                        errorMessage.textContent = error.message || "Une erreur s'est produite lors de l'inscription";
+                        errorMessage.style.display = 'block';
+                    });
+                });
+
+                // Form validation
+                function validateForm() {
+                    let isValid = true;
+                    
+                    // Validate password match
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    if (password !== confirmPassword) {
+                        errorMessage.textContent = "Les mots de passe ne correspondent pas";
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    // Validate role selection
+                    const role = document.getElementById('role').value;
+                    if (!role) {
+                        errorMessage.textContent = "Veuillez sélectionner un type de compte";
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    // Validate terms acceptance
+                    const termsAccepted = document.getElementById('acceptTerms').checked;
+                    if (!termsAccepted) {
+                        errorMessage.textContent = "Vous devez accepter les conditions d'utilisation";
+                        errorMessage.style.display = 'block';
+                        isValid = false;
+                    }
+                    
+                    return isValid;
+                }
+
+                // Password toggle functionality
+                const toggleButtons = document.querySelectorAll('.password-toggle-icon');
+                toggleButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const passwordInput = this.previousElementSibling;
+                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        passwordInput.setAttribute('type', type);
+                        this.classList.toggle('bi-eye');
+                        this.classList.toggle('bi-eye-slash');
+                    });
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

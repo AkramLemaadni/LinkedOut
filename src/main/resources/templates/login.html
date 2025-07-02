@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Connexion</title>
+    <style>
+        /* Custom styles for the login page */
+        .auth-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center; /* Center content */
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlideUp 0.6s ease-out forwards;
+        }
+        .auth-icon {
+            font-size: 3rem;
+            color: #1a73e8; /* Google Blue */
+            margin-bottom: 1rem;
+        }
+        .auth-header h2 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+         .auth-header p {
+             color: #5f6368;
+             margin-bottom: 2rem;
+         }
+        .form-label {
+            font-weight: 500;
+            color: #5f6368;
+             display: flex; /* Align icon and label */
+             align-items: center;
+             margin-bottom: 0.5rem;
+        }
+         .form-label i {
+             margin-right: 8px;
+             color: #1a73e8;
+         }
+        .form-control {
+            border-radius: 5px;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem; /* Add space below inputs */
+        }
+        .form-control:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
+        }
+        .form-check {
+            text-align: left;
+             margin-bottom: 1.5rem;
+        }
+         .form-check-label {
+             color: #5f6368;
+         }
+        .btn-primary {
+            background-color: #1a73e8;
+            border: none;
+            padding: 0.75rem;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            width: 100%; /* Full width button */
+             margin-top: 1rem;
+        }
+        .btn-primary:hover {
+            background-color: #1557b0;
+            transform: translateY(-2px);
+        }
+        .error-message {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #5f6368;
+        }
+        .auth-footer a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animation Keyframes (if not already in base.html) */
+        @keyframes fadeInSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="auth-container">
+            <i class="bi bi-person-circle auth-icon"></i>
+            <div class="auth-header">
+                <h2>Connexion</h2>
+                <p>Bienvenue sur LinkedOut</p>
+            </div>
+            <div id="login-error-message" class="error-message" role="alert" aria-live="polite" style="display: none;"></div>
+            
+            <form id="loginForm" action="javascript:void(0);">
+                <div class="mb-3">
+                    <label for="email" class="form-label"><i class="bi bi-envelope"></i> Email</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           required aria-required="true" 
+                           placeholder="Entrez votre email"
+                           autocomplete="email">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label"><i class="bi bi-lock"></i> Mot de passe</label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           required aria-required="true"
+                           placeholder="Entrez votre mot de passe"
+                           autocomplete="current-password">
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                     <div class="form-check">
+                         <input class="form-check-input" type="checkbox" id="remember-me">
+                         <label class="form-check-label" for="remember-me">
+                             Se souvenir de moi
+                         </label>
+                     </div>
+                     <a href="#" class="auth-footer-link">Mot de passe oublié ?</a>
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginButton" aria-label="Se connecter">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
+                </button>
+            </form>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Check if we're already logged in
+                    const token = localStorage.getItem('jwtToken');
+                    if (token) {
+                        // Try to validate token by making a request to the current-user endpoint
+                        fetch('/api/auth/current-user', {
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json(); // Parse the response to check if it's valid
+                            } else {
+                                // If status is not OK, token is invalid
+                                throw new Error('Invalid token');
+                            }
+                        })
+                        .then(data => {
+                            // Additional validation of the response
+                            if (data.success && data.user) {
+                                // Token is valid, redirect to dashboard
+                                window.location.href = '/dashboard';
+                            } else {
+                                // Something is wrong with the response
+                                throw new Error('Invalid user data');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error checking authentication:', error);
+                            // Clear the invalid token
+                            localStorage.removeItem('jwtToken');
+                        });
+                    }
+
+                    // Set up form submission
+                    const loginForm = document.getElementById('loginForm');
+                    const loginButton = document.getElementById('loginButton');
+                    const errorMessage = document.getElementById('login-error-message');
+
+                    loginForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        // Clear previous error messages
+                        errorMessage.style.display = 'none';
+                        
+                        // Disable button to prevent multiple submissions
+                        loginButton.disabled = true;
+                        loginButton.innerHTML = '<i class="bi bi-hourglass"></i> Connexion...';
+                        
+                        const email = document.getElementById('email').value;
+                        const password = document.getElementById('password').value;
+                        
+                        // Validate form
+                        if (!email || !password) {
+                            showError('Veuillez saisir votre email et votre mot de passe.');
+                            return;
+                        }
+                        
+                        // Send login request
+                        fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                email: email,
+                                password: password
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(data => {
+                                    throw new Error(data.message || 'Échec de la connexion');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success && data.token) {
+                                // Store token
+                                localStorage.setItem('jwtToken', data.token);
+                                
+                                // Create a form and submit it directly to the dashboard
+                                const form = document.createElement('form');
+                                form.method = 'GET';
+                                form.action = '/dashboard';
+                                
+                                // Add a hidden field with the token
+                                const tokenInput = document.createElement('input');
+                                tokenInput.type = 'hidden';
+                                tokenInput.name = 'token';
+                                tokenInput.value = data.token;
+                                form.appendChild(tokenInput);
+                                
+                                document.body.appendChild(form);
+                                form.submit();
+                            } else {
+                                showError('Réponse de serveur invalide');
+                            }
+                        })
+                        .catch(error => {
+                            showError(error.message || 'Échec de la connexion. Veuillez réessayer.');
+                        });
+                    });
+                    
+                    function showError(message) {
+                        errorMessage.textContent = message;
+                        errorMessage.style.display = 'block';
+                        loginButton.disabled = false;
+                        loginButton.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i> Se connecter';
+                    }
+                });
+            </script>
+            <div class="auth-footer">
+                <p>Pas encore de compte ? <a th:href="@{/register}" aria-label="Créer un nouveau compte">S'inscrire</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

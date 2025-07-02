@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Modération des Offres</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Modération des Offres d'Emploi</h1>
+            <p class="dashboard-subtitle">Acceptez ou rejetez les offres créées par les recruteurs</p>
+        </div>
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0"><i class="bi bi-briefcase me-2"></i>Offres à modérer</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Titre</th>
+                                <th>Entreprise</th>
+                                <th>Recruteur</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="offer : ${offers}">
+                                <td th:text="${offer.id}"></td>
+                                <td th:text="${offer.title}"></td>
+                                <td th:text="${offer.company.name}"></td>
+                                <td th:text="${offer.recruiter.firstName + ' ' + offer.recruiter.lastName}"></td>
+                                <td>
+                                    <span th:if="${offer.status != null and offer.status.name() == 'PENDING'}" class="badge bg-warning text-dark">En attente</span>
+                                    <span th:if="${offer.status != null and offer.status.name() == 'REJECTED'}" class="badge bg-danger">Refusée</span>
+                                    <span th:if="${offer.status != null and offer.status.name() == 'ACCEPTED' and offer.active}" class="badge bg-success">Active</span>
+                                    <span th:if="${offer.status != null and offer.status.name() == 'ACCEPTED' and !offer.active}" class="badge bg-secondary">Inactive</span>
+                                </td>
+                                <td>
+                                    <form th:action="@{'/admin/offers/' + ${offer.id} + '/accept'}" method="post" th:if="${offer.status != null and offer.status.name() == 'PENDING'}" style="display:inline-block;">
+                                        <button type="submit" class="btn btn-success btn-sm">Accepter</button>
+                                    </form>
+                                    <form th:action="@{'/admin/offers/' + ${offer.id} + '/reject'}" method="post" th:if="${offer.status != null and offer.status.name() == 'PENDING'}" style="display:inline-block;">
+                                        <button type="submit" class="btn btn-danger btn-sm">Rejeter</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html> 

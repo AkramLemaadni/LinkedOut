@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>LinkedOut</title>
+    <style>
+        /* Custom styles for the index page */
+        .hero-section {
+            background-color: #1a73e8; /* Google Blue background */
+            padding: 6rem 0;
+            text-align: center;
+            color: #ffffff; /* White text */
+            animation: fadeIn 1s ease-out;
+        }
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+        .hero-section .lead {
+            font-size: 1.25rem;
+            margin-bottom: 2.5rem;
+            color: #e3f2fd; /* Light blue */
+        }
+        .hero-buttons .btn {
+            margin: 0 10px;
+            font-size: 1.1rem;
+            padding: 0.75rem 2rem;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+         .hero-buttons .btn-outline-light {
+             color: #ffffff;
+             border-color: #ffffff;
+         }
+         .hero-buttons .btn-outline-light:hover {
+             background-color: #ffffff;
+             color: #1a73e8;
+             transform: translateY(-2px);
+         }
+
+        /* Fonctionnalités Section */
+        .features-section {
+            padding: 4rem 0;
+        }
+         .features-section h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2rem;
+            color: #333;
+        }
+        .feature-item {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+             opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlideUp 0.8s ease-out forwards;
+        }
+         .feature-item:hover {
+             transform: translateY(-5px);
+             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+         }
+         .feature-item:nth-child(odd) { /* Delay animation for the second card */
+            animation-delay: 0.15s;
+        }
+         .feature-item:nth-child(even) { /* Delay animation for the second card */
+            animation-delay: 0.3s;
+        }
+        .feature-item i {
+            font-size: 2.5rem;
+            color: #1a73e8; /* Google Blue */
+            margin-bottom: 1rem;
+        }
+         .feature-item h3 {
+             color: #333;
+             margin-bottom: 0.75rem;
+             font-size: 1.3rem;
+         }
+         .feature-item p {
+             color: #5f6368;
+             font-size: 1rem;
+         }
+
+        /* General Call to Action Button below features */
+         .general-cta-button {
+             text-align: center;
+             margin-top: 2rem;
+             margin-bottom: 4rem;
+         }
+         .general-cta-button .btn {
+             font-size: 1.2rem;
+             padding: 0.75rem 2rem;
+             border-radius: 30px;
+             background-color: #1a73e8;
+             color: #ffffff;
+             border: none;
+             transition: all 0.3s ease;
+         }
+          .general-cta-button .btn:hover {
+             background-color: #1557b0;
+             transform: translateY(-2px);
+         }
+
+         /* Animations */
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="container">
+                <h1>Trouvez votre prochain emploi ou votre prochain talent</h1>
+                <p class="lead">La plateforme qui connecte les meilleurs talents aux meilleures opportunités</p>
+                <div class="hero-buttons">
+                    <a th:href="@{/register}" class="btn btn-outline-light">Je cherche un emploi</a>
+                    <a th:href="@{/register}" class="btn btn-outline-light">Je recrute</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fonctionnalités Section -->
+        <div class="features-section">
+            <div class="container">
+                <h2>Nos Fonctionnalités</h2>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="feature-item">
+                            <i class="bi bi-search"></i>
+                            <h3>Recherche Intelligente</h3>
+                            <p>Trouvez des offres d'emploi pertinentes ou des candidats qualifiés en quelques clics</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-item">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <h3>CV en Ligne</h3>
+                            <p>Créez et gérez votre CV professionnel facilement</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="feature-item">
+                            <i class="bi bi-bell"></i>
+                            <h3>Alertes Personnalisées</h3>
+                            <p>Soyez notifié des nouvelles opportunités correspondant à vos critères</p>
+                        </div>
+                    </div>
+                     <div class="col-md-3">
+                        <div class="feature-item">
+                            <i class="bi bi-graph-up"></i>
+                            <h3>Suivi des Candidatures</h3>
+                            <p>Suivez l'état de vos candidatures en temps réel</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action Button below features -->
+         <div class="general-cta-button">
+             <a th:href="@{/register}" class="btn">Rejoignez LinkedOut</a>
+         </div>
+
+    </div>
+</body>
+</html> 
+</html> 

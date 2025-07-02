@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de l'Offre d'Emploi - LinkedOut</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 id="job-offer-title" class="text-center">Chargement...</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="job-offer-details">
+                            <p><strong>Description:</strong> <span id="job-offer-description"></span></p>
+                            <p><strong>Prérequis:</strong> <span id="job-offer-requirements"></span></p>
+                            <p><strong>Localisation:</strong> <span id="job-offer-location"></span></p>
+                            <p><strong>Salaire:</strong> <span id="job-offer-salary"></span></p>
+                            <p><strong>Type de Contrat:</strong> <span id="job-offer-contractType"></span></p>
+                            <p><strong>Entreprise:</strong> <span id="job-offer-company"></span></p>
+                            <p><strong>Statut:</strong> <span id="job-offer-active"></span></p>
+                            </div>
+                        <div id="loading-spinner" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Chargement des détails de l'offre...</p>
+                        </div>
+                        <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                        <div class="text-center mt-4">
+                            <a href="/dashboard" class="btn btn-secondary">Retour au Tableau de Bord</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!localStorage.getItem('jwtToken')) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const jobOfferId = urlParams.get('id');
+
+            const detailsContainer = document.getElementById('job-offer-details');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const errorMessageDiv = document.getElementById('error-message');
+            const jobOfferTitle = document.getElementById('job-offer-title');
+
+            if (!jobOfferId) {
+                errorMessageDiv.textContent = 'Job Offer ID not found in URL.';
+                errorMessageDiv.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+                return;
+            }
+
+            fetchJobOfferDetails(jobOfferId);
+
+            async function fetchJobOfferDetails(id) {
+                detailsContainer.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+                errorMessageDiv.style.display = 'none';
+
+                try {
+                    const response = await auth.fetchWithAuth(`/api/job-offers/${id}`, {
+                        method: 'GET'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch job offer details: ${response.statusText}`);
+                    }
+
+                    const jobOffer = await response.json();
+                    displayJobOfferDetails(jobOffer);
+
+                } catch (error) {
+                    console.error('Error fetching job offer details:', error);
+                    errorMessageDiv.textContent = 'Erreur: Failed to fetch job details' + (error.message ? ': ' + error.message : '');
+                    errorMessageDiv.style.display = 'block';
+                    detailsContainer.style.display = 'none';
+                }
+                 finally {
+                    loadingSpinner.style.display = 'none';
+                }
+            }
+
+            function displayJobOfferDetails(jobOffer) {
+                jobOfferTitle.textContent = jobOffer.title || 'Détails de l\'Offre';
+                document.getElementById('job-offer-description').textContent = jobOffer.description || 'Non spécifié';
+                document.getElementById('job-offer-requirements').textContent = jobOffer.requirements || 'Non spécifié';
+                document.getElementById('job-offer-location').textContent = jobOffer.location || 'Non spécifié';
+                document.getElementById('job-offer-salary').textContent = jobOffer.salary || 'Non spécifié';
+                document.getElementById('job-offer-contractType').textContent = jobOffer.contractType || 'Non spécifié';
+                document.getElementById('job-offer-company').textContent = jobOffer.company ? jobOffer.company.name : 'Non spécifié';
+                document.getElementById('job-offer-active').textContent = jobOffer.active ? 'Active' : 'Inactive';
+
+                detailsContainer.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html> 

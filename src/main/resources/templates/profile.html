@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Profil</title>
+    <style>
+        .profile-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .profile-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 2rem;
+            border: 3px solid #1a73e8;
+        }
+        .profile-picture-placeholder {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 2rem;
+            font-size: 3rem;
+            color: #757575;
+        }
+        .profile-title h1 {
+            margin: 0;
+            color: #333;
+        }
+        .profile-title p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        .profile-section {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .section-title {
+            color: #1a73e8;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            transition: all 0.3s;
+        }
+        .custom-file-upload:hover {
+            background-color: #e9ecef;
+        }
+        .upload-preview {
+            margin-top: 1rem;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #d93025;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: #0f9d58;
+            margin-top: 10px;
+        }
+        .dynamic-list {
+            margin-bottom: 1rem;
+        }
+        .dynamic-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+        .dynamic-item input {
+            flex-grow: 1;
+            margin-right: 0.5rem;
+        }
+        /* Tag styling */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .tag {
+            background-color: #e1f5fe;
+            border: 1px solid #4fc3f7;
+            color: #0288d1;
+            border-radius: 20px;
+            padding: 5px 12px;
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .tag:hover {
+            background-color: #b3e5fc;
+        }
+        .tag .tag-close {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .tag-input-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tag-input {
+            border-radius: 4px 0 0 4px;
+            flex-grow: 1;
+        }
+        .tag-add-btn {
+            border-radius: 0 4px 4px 0;
+        }
+        /* Skill specific styling */
+        .skill-tag {
+            background-color: #e3f2fd;
+            border-color: #90caf9;
+            color: #1976d2;
+        }
+        /* Education specific styling */
+        .education-tag {
+            background-color: #e8f5e9;
+            border-color: #a5d6a7;
+            color: #388e3c;
+        }
+        /* Experience specific styling */
+        .experience-tag {
+            background-color: #fff3e0;
+            border-color: #ffcc80;
+            color: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="profile-container">
+            <div id="profile-content" class="loading">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Chargement du profil...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Candidate Profile Template -->
+        <template id="candidate-profile-template">
+            <div class="profile-header">
+                <div id="profile-picture-container">
+                    <!-- Will be populated dynamically -->
+                </div>
+                <div class="profile-title">
+                    <h1 id="profile-name"><!-- Will be populated dynamically --></h1>
+                    <p id="profile-email"><!-- Will be populated dynamically --></p>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h2 class="section-title">Informations Personnelles</h2>
+                <form id="candidate-profile-form">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Adresse</label>
+                        <input type="text" class="form-control" id="address" name="address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Photo de profil</label>
+                        <div>
+                            <label for="profile-picture-upload" class="custom-file-upload">
+                                <i class="bi bi-upload"></i> Choisir une photo
+                            </label>
+                            <input type="file" id="profile-picture-upload" accept="image/*" style="display: none;">
+                            <div id="profile-picture-preview" class="upload-preview" style="display: none;"></div>
+                            <div id="profile-picture-progress" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CV</label>
+                        <div>
+                            <label for="cv-upload" class="custom-file-upload">
+                                <i class="bi bi-file-earmark-text"></i> Télécharger votre CV
+                            </label>
+                            <input type="file" id="cv-upload" accept=".pdf,.doc,.docx" style="display: none;">
+                            <div id="cv-preview" class="upload-preview" style="display: none;"></div>
+                            <div id="cv-progress" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div id="profile-error" class="error-message" style="display: none;"></div>
+                    <div id="profile-success" class="success-message" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary" id="save-profile-btn">
+                        <i class="bi bi-save"></i> Enregistrer
+                    </button>
+                </form>
+            </div>
+            
+            <div class="profile-section">
+                <h2 class="section-title">Compétences</h2>
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="Ajouter une compétence">
+                    <div class="form-text">Appuyez sur "Ajouter" ou sur Entrée pour ajouter une compétence</div>
+                </div>
+                <button type="button" class="btn btn-primary" id="add-skill">
+                    <i class="bi bi-plus"></i> Ajouter
+                </button>
+            </div>
+            
+            <div class="profile-section">
+                <h2 class="section-title">Formation</h2>
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="Ajouter une formation (ex: Master en Informatique, 2018-2020)">
+                    <div class="form-text">Appuyez sur "Ajouter" ou sur Entrée pour ajouter une formation</div>
+                </div>
+                <button type="button" class="btn btn-primary" id="add-education">
+                    <i class="bi bi-plus"></i> Ajouter
+                </button>
+            </div>
+            
+            <div class="profile-section">
+                <h2 class="section-title">Expérience Professionnelle</h2>
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="Ajouter une expérience (ex: Développeur Web chez XYZ, 2019-2021)">
+                    <div class="form-text">Appuyez sur "Ajouter" ou sur Entrée pour ajouter une expérience</div>
+                </div>
+                <button type="button" class="btn btn-primary" id="add-experience">
+                    <i class="bi bi-plus"></i> Ajouter
+                </button>
+            </div>
+        </template>
+        
+        <!-- Recruiter Profile Template -->
+        <template id="recruiter-profile-template">
+            <div class="profile-header">
+                <div id="profile-picture-container">
+                    <div class="profile-picture-placeholder">
+                        <i class="bi bi-building"></i>
+                    </div>
+                </div>
+                <div class="profile-title">
+                    <h1 id="profile-name"><!-- Will be populated dynamically --></h1>
+                    <p id="profile-email"><!-- Will be populated dynamically --></p>
+                </div>
+            </div>
+            
+            <form id="recruiter-profile-form" enctype="multipart/form-data">
+            <div class="profile-section">
+                <h2 class="section-title">Informations Personnelles</h2>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="position" class="form-label">Poste</label>
+                        <input type="text" class="form-control" id="position" name="position">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Photo de profil</label>
+                        <div>
+                            <label for="profile-picture-upload" class="custom-file-upload">
+                                <i class="bi bi-upload"></i> Choisir une photo
+                            </label>
+                            <input type="file" id="profile-picture-upload" name="profilePicture" accept="image/*" style="display: none;">
+                            <div id="profile-picture-preview" class="upload-preview" style="display: none;"></div>
+                            <div id="profile-picture-progress" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div id="profile-error" class="error-message" style="display: none;"></div>
+                    <div id="profile-success" class="success-message" style="display: none;"></div>
+                    <button type="submit" id="save-profile-btn" class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer</button>
+            </div>
+            
+            <div class="profile-section">
+                <h2 class="section-title">Information Entreprise</h2>
+                    <input type="hidden" id="companyId" name="companyId">
+                    
+                    <div class="mb-3">
+                        <label for="companyName" class="form-label">Nom de l'entreprise</label>
+                        <input type="text" class="form-control" id="companyName" name="companyName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="companyIndustry" class="form-label">Secteur d'activité</label>
+                        <input type="text" class="form-control" id="companyIndustry" name="companyIndustry">
+                    </div>
+                    <div class="mb-3">
+                        <label for="companyLocation" class="form-label">Localisation</label>
+                        <input type="text" class="form-control" id="companyLocation" name="companyLocation">
+                    </div>
+                    <div class="mb-3">
+                        <label for="companyWebsite" class="form-label">Site web</label>
+                        <input type="url" class="form-control" id="companyWebsite" name="companyWebsite">
+                    </div>
+                    <div class="mb-3">
+                        <label for="companyDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="companyDescription" name="companyDescription" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Logo</label>
+                        <div>
+                            <label for="company-logo-upload" class="custom-file-upload">
+                                <i class="bi bi-upload"></i> Choisir un logo
+                            </label>
+                            <input type="file" id="company-logo-upload" name="companyLogo" accept="image/*" style="display: none;">
+                            <div id="company-logo-preview" class="upload-preview" style="display: none;"></div>
+                            <div id="company-logo-progress" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <div id="company-error" class="error-message" style="display: none;"></div>
+                    <div id="company-success" class="success-message" style="display: none;"></div>
+                    <button type="submit" id="save-company-btn" class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer les informations de l'entreprise</button>
+                </div>
+                </form>
+        </template>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth.js}"></script>
+        <script th:src="@{/js/profile.js}"></script>
+        <script>
+        function showCompanySuccess() {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'alert alert-success';
+            successDiv.innerHTML = "Entreprise associée avec succès ! Vous pouvez maintenant créer des offres d'emploi.";
+            document.getElementById('profile-content').prepend(successDiv);
+            setTimeout(() => successDiv.remove(), 4000);
+        }
+        </script>
+    </th:block>
+</body>
+</html> 

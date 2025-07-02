@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/base}">
+<head>
+    <title>Créer une offre d'emploi</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-5">
+        <h1>Créer une nouvelle offre d'emploi</h1>
+        <form id="create-job-offer-form">
+            <div class="mb-3">
+                <label for="title" class="form-label">Titre</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="location" class="form-label">Lieu</label>
+                <input type="text" class="form-control" id="location" name="location" required>
+            </div>
+            <div class="mb-3">
+                <label for="contractType" class="form-label">Type de contrat</label>
+                <input type="text" class="form-control" id="contractType" name="contractType" required>
+            </div>
+            <div class="mb-3">
+                <label for="salary" class="form-label">Salaire</label>
+                <input type="number" class="form-control" id="salary" name="salary">
+            </div>
+            <button type="submit" class="btn btn-primary">Créer l'offre</button>
+        </form>
+        <div id="offer-result" class="mt-3"></div>
+    </div>
+</div>
+<script th:src="@{/js/auth.js}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vérifie si le recruteur a une entreprise avant d'autoriser la création d'offre
+        auth.fetchWithAuth('/api/auth/current-user')
+            .then(response => response.json())
+            .then(data => {
+                if (data.user && data.user.role === 'RECRUITER' && (!data.user.company || !data.user.company.id)) {
+                    document.getElementById('create-job-offer-form').style.display = 'none';
+                    document.getElementById('offer-result').innerHTML = `
+                        <div class='alert alert-warning'>
+                            <i class='bi bi-exclamation-triangle'></i> Vous devez d'abord associer une entreprise à votre profil recruteur.<br>
+                            <a href='/profile' class='btn btn-primary mt-2'>Compléter mon profil</a>
+                        </div>
+                    `;
+                }
+            });
+        document.getElementById('create-job-offer-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                location: document.getElementById('location').value,
+                contractType: document.getElementById('contractType').value,
+                salary: document.getElementById('salary').value,
+                requiredSkills: [],
+                responsibilities: []
+            };
+            auth.fetchWithAuth('/api/recruiter/job-offers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(async response => {
+                let res;
+                try {
+                    res = await response.json();
+                } catch (err) {
+                    res = { success: false, message: 'Erreur serveur ou format de réponse invalide.' };
+                }
+                const resultDiv = document.getElementById('offer-result');
+                if (res.success) {
+                    resultDiv.innerHTML = '<div class="alert alert-success">Offre créée avec succès !</div>';
+                    document.getElementById('create-job-offer-form').reset();
+                } else {
+                    resultDiv.innerHTML = '<div class="alert alert-danger">' + (res.message || 'Erreur lors de la création de l\'offre') + '</div>';
+                }
+            })
+            .catch(err => {
+                document.getElementById('offer-result').innerHTML = '<div class="alert alert-danger">Erreur réseau ou serveur : ' + err + '</div>';
+            });
+        });
+    });
+</script>
+</body>
+</html> 

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #f8f9fa;
+            --accent-color: #e8f0fe;
+            --text-color: #333;
+            --light-text: #6c757d;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .dashboard-subtitle {
+            color: var(--light-text);
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            border: none;
+        }
+        
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .user-card {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-role {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        
+        .user-detail {
+            display: flex;
+            align-items: center;
+            color: var(--light-text);
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-detail i {
+            margin-right: 0.5rem;
+            width: 20px;
+            color: var(--primary-color);
+        }
+        
+        .search-container {
+            margin-bottom: 2rem;
+        }
+        
+        .search-input {
+            border-radius: 50px;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25);
+            border-color: var(--primary-color);
+        }
+        
+        .search-button {
+            border-radius: 50px;
+            padding: 0.75rem 1.5rem;
+        }
+        
+        .job-card {
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            background-color: white;
+            box-shadow: var(--shadow);
+        }
+        
+        .job-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .job-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .job-company {
+            font-size: 0.9rem;
+            color: var(--light-text);
+            margin-bottom: 0.5rem;
+        }
+        
+        .job-location {
+            font-size: 0.9rem;
+            color: var(--light-text);
+            margin-bottom: 1rem;
+        }
+        
+        .job-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 50px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+        
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: var(--light-text);
+        }
+        
+        .loading-spinner i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--light-text);
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1.5rem;
+            }
+        }
+        
+        .candidate-count-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.18rem 0.7rem 0.18rem 0.5rem;
+            margin-left: 0.5rem;
+            margin-bottom: 0.2rem;
+            height: 28px;
+            line-height: 1;
+            box-shadow: 0 1px 2px rgba(26,115,232,0.07);
+        }
+        .candidate-count-badge i {
+            font-size: 1rem;
+            margin-right: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Tableau de bord</h1>
+                <p class="dashboard-subtitle">Bienvenue sur votre espace personnel LinkedOut</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- User Profile Card -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div id="user-details" class="card-body user-card">
+                            <div class="loading-spinner">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span class="ms-2">Chargement de vos informations...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content Area -->
+                <div class="col-md-8">
+                    <!-- Candidate Content -->
+                    <div id="candidate-content" style="display: none;">
+                        <!-- Nouvelle section Vos Candidatures -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h2><i class="bi bi-briefcase-fill me-2"></i>Vos Candidatures</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="applications-list">
+                                    <div class="loading-spinner">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                        <span class="ms-2">Chargement de vos candidatures...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Available Job Offers Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h2><i class="bi bi-globe me-2"></i>Offres d'emploi disponibles</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="available-job-offers-list">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    <span class="ms-2">Chargement des offres d'emploi...</span>
+                                </div>
+                                 <div id="available-job-offers-empty" class="empty-state hidden">
+                                    <i class="bi bi-emoji-frown"></i>
+                                    <p>Aucune offre d'emploi disponible pour le moment.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recruiter Content -->
+                    <div id="recruiter-content" style="display: none;">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h2><i class="bi bi-briefcase-fill me-2"></i>Vos Offres d'Emploi</h2>
+                                    <a href="/create-job-offer.html" class="btn btn-sm btn-light">
+                                        <i class="bi bi-plus-circle"></i> Nouvelle offre
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="job-offers-list" class="loading-spinner">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    <span class="ms-2">Chargement de vos offres d'emploi...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="bi bi-graph-up me-2"></i>Statistiques</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="card h-100">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-text fs-1 text-primary mb-2"></i>
+                                                <h3 id="applications-count">--</h3>
+                                                <p class="mb-0">Candidatures</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-check-circle fs-1 text-primary mb-2"></i>
+                                                <h3 id="active-count">--</h3>
+                                                <p class="mb-0">Actives</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth.js}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Dashboard loaded, checking authentication...');
+                const token = auth.getToken();
+                
+                if (!token) {
+                    console.error('No authentication token found');
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Fetch current user details
+                fetchCurrentUser();
+                
+                function fetchCurrentUser() {
+                    console.log('Fetching current user...');
+                    auth.fetchWithAuth('/api/auth/current-user')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch user details');
+                            }
+                            // Vérifie le type de contenu
+                            const contentType = response.headers.get('content-type');
+                            if (!contentType || !contentType.includes('application/json')) {
+                                throw new Error('Réponse inattendue du serveur (pas du JSON)');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('User data received:', data);
+                            
+                            if (!data.success) {
+                                throw new Error(data.message || 'Failed to load user');
+                            }
+                            
+                            const user = data.user;
+                            if (!user) {
+                                throw new Error('User data is missing');
+                            }
+                            
+                            // Update user details section
+                            const userDetails = document.getElementById('user-details');
+                            userDetails.innerHTML = `
+                                <div class="user-avatar">
+                                    ${user.profilePicturePath ? 
+                                        `<img src="/uploads/${user.profilePicturePath}" alt="Profile picture" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` :
+                                        `<i class="bi bi-person"></i>`
+                                    }
+                                </div>
+                                <h3 class="user-name">${user.firstName} ${user.lastName}</h3>
+                                <span class="user-role">${user.role}</span>
+                                <div class="user-info">
+                                    <div class="user-detail">
+                                        <i class="bi bi-envelope"></i>
+                                        <span>${user.email}</span>
+                                    </div>
+                                    <div class="user-detail">
+                                        <i class="bi bi-telephone"></i>
+                                        <span>${user.phone}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="/profile" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-pencil-square me-2"></i> Modifier mon profil
+                                    </a>
+                                </div>
+                            `;
+                            
+                            // Show role-specific content
+                            if (user.role === 'CANDIDATE') {
+                                document.getElementById('candidate-content').style.display = 'block';
+                                fetchApplications();
+                                fetchAvailableJobOffers();
+                            } else if (user.role === 'RECRUITER') {
+                                document.getElementById('recruiter-content').style.display = 'block';
+                                fetchJobOffers();
+                                fetchRecruiterStats();
+                            }
+                            
+                            // Log user role for debugging
+                            console.log('User role:', user.role);
+                        })
+                        .catch(error => {
+                            console.error('Failed to fetch current user:', error);
+                            const userDetails = document.getElementById('user-details');
+                            userDetails.innerHTML = `
+                                <div class="error-message">
+                                    <i class="bi bi-exclamation-triangle me-2"></i> ${error.message || 'Failed to load user data'}
+                                </div>
+                                <button class="btn btn-primary w-100 mt-3" onclick="window.location.href='/login'">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i> Retour à la connexion
+                                </button>
+                            `;
+                        });
+                }
+                
+                function fetchApplications() {
+                    auth.fetchWithAuth('/api/candidate/applications')
+                        .then(response => {
+                            if (!response.ok) throw new Error('Erreur lors du chargement des candidatures');
+                            return response.json();
+                        })
+                        .then(data => {
+                            const applications = data.data || [];
+                            const applicationsList = document.getElementById('applications-list');
+                            if (applications.length > 0) {
+                                let html = '<ul class="list-group">';
+                                applications.forEach(app => {
+                                    let badgeClass = 'bg-warning text-dark';
+                                    let statusText = 'En attente';
+                                    if (app.status === 'ACCEPTED') {
+                                        badgeClass = 'bg-success text-white';
+                                        statusText = 'Acceptée';
+                                    } else if (app.status === 'REJECTED') {
+                                        badgeClass = 'bg-danger text-white';
+                                        statusText = 'Refusée';
+                                    } else if (app.status === 'PENDING') {
+                                        badgeClass = 'bg-warning text-dark';
+                                        statusText = 'En attente';
+                                    }
+                                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>${app.jobOffer.title}</span>
+                                        <span class="badge ${badgeClass}">${statusText}</span>
+                                    </li>`;
+                                });
+                                html += '</ul>';
+                                applicationsList.innerHTML = html;
+                            } else {
+                                applicationsList.innerHTML = `<div class="empty-state">
+                                    <i class="bi bi-file-earmark-x"></i>
+                                    <p>Vous n'avez pas encore postulé à une offre d'emploi.</p>
+                                </div>`;
+                            }
+                        })
+                        .catch(error => {
+                            document.getElementById('applications-list').innerHTML = `<div class="error-message">${error.message}</div>`;
+                        });
+                }
+                
+                function fetchJobOffers() {
+                    console.log('Fetching job offers for recruiter...');
+                    auth.fetchWithAuth('/api/recruiter/job-offers')
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(data => { throw data; });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Job offers data:', data);
+                            // Set total candidates count in statistics
+                            if (typeof data.totalCandidatesCount !== 'undefined') {
+                                document.getElementById('applications-count').textContent = data.totalCandidatesCount;
+                            }
+                            let jobOffers = [];
+                            if (data && data.data && Array.isArray(data.data)) {
+                                jobOffers = data.data;
+                            }
+                            const jobOffersList = document.getElementById('job-offers-list');
+                            
+                            if (jobOffers.length > 0) {
+                                let html = '<ul class="list-group">';
+                                jobOffers.forEach(offer => {
+                                    let badgeClass = '';
+                                    let badgeText = '';
+                                    if (offer.status === 'PENDING') {
+                                        badgeClass = 'bg-warning text-dark';
+                                        badgeText = 'En attente';
+                                    } else if (offer.status === 'REJECTED') {
+                                        badgeClass = 'bg-danger text-white';
+                                        badgeText = 'Refusée';
+                                    } else if (offer.status === 'ACCEPTED' && offer.active) {
+                                        badgeClass = 'bg-success text-white';
+                                        badgeText = 'Active';
+                                    } else if (offer.status === 'ACCEPTED' && !offer.active) {
+                                        badgeClass = 'bg-secondary text-white';
+                                        badgeText = 'Inactive';
+                                    } else {
+                                        badgeClass = 'bg-secondary text-white';
+                                        badgeText = 'Inconnu';
+                                    }
+                                    html += `
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1">${offer.title}</h5>
+                                                <p class="mb-1 text-muted"><i class="bi bi-geo-alt me-1"></i> ${offer.location || 'Non spécifié'}</p>
+                                                <small class="job-badge ${badgeClass}">${badgeText}</small>
+                                                <span class="candidate-count-badge"><i class="bi bi-person"></i> ${offer.candidatesCount} candidat(s)</span>
+                                            </div>
+                                            <div>
+                                                <a href="/recruiter/applications-list?jobOfferId=${offer.id}" class="btn btn-outline-primary btn-sm me-1">
+                                                  <i class="bi bi-people"></i> Candidatures
+                                                </a>
+                                                <a href="/view-job-offer.html?id=${offer.id}" class="btn btn-sm btn-outline-primary me-1" title="Voir l'offre">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="/edit-job-offer.html?id=${offer.id}" class="btn btn-sm btn-outline-secondary" title="Modifier l'offre">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger delete-job-offer" data-id="${offer.id}" title="Supprimer l'offre">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </li>
+                                    `;
+                                });
+                                html += '</ul>';
+                                jobOffersList.innerHTML = html;
+                            } else {
+                                jobOffersList.innerHTML = `
+                                    <div class="empty-state">
+                                        <i class="bi bi-briefcase-x"></i>
+                                        <p>Vous n'avez pas encore publié d'offres d'emploi.</p>
+                                        <a href="/create-job-offer.html" class="btn btn-primary mt-2">
+                                            <i class="bi bi-plus-circle me-1"></i> Créer une offre
+                                        </a>
+                                    </div>
+                                `;
+                            }
+
+                            // Update statistics for active offers
+                            if (jobOffers.length > 0) {
+                                const activeCount = jobOffers.filter(offer => offer.active && offer.status === 'ACCEPTED').length;
+                                document.getElementById('active-count').textContent = activeCount;
+                            }
+                        })
+                        .catch(err => {
+                            const jobOffersList = document.getElementById('job-offers-list');
+                            if (err.message && err.message.includes('company')) {
+                                jobOffersList.innerHTML = `
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> Vous devez compléter votre profil recruteur et associer une entreprise avant de pouvoir créer ou voir des offres d'emploi.<br>
+                                        <a href="/profile" class="btn btn-primary mt-2">Compléter mon profil</a>
+                                    </div>
+                                `;
+                            } else {
+                                jobOffersList.innerHTML = `<div class="alert alert-danger">${err.message || 'Failed to fetch job offers'}</div>`;
+                            }
+                        });
+                }
+
+                function fetchRecruiterStats() {
+                    // This would be a real API call in a full implementation
+                    // For now, we'll just set some placeholder values
+                    setTimeout(() => {
+                        document.getElementById('views-count').textContent = Math.floor(Math.random() * 1000);
+                        document.getElementById('applications-count').textContent = Math.floor(Math.random() * 100);
+                    }, 1000);
+                }
+                
+                function initJobSearch() {
+                    const searchButton = document.getElementById('search-button');
+                    const searchInput = document.getElementById('job-search');
+                    
+                    searchButton.addEventListener('click', function() {
+                        searchJobs(searchInput.value);
+                    });
+                    
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            searchJobs(searchInput.value);
+                        }
+                    });
+                }
+                
+                function searchJobs(query) {
+                    const resultsContainer = document.getElementById('job-search-results');
+                    resultsContainer.innerHTML = `
+                        <div class="loading-spinner">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span class="ms-2">Recherche d'offres d'emploi...</span>
+                        </div>
+                    `;
+                    
+                    let url = '/api/public/job-offers';
+                    if (query) {
+                        url += `?query=${encodeURIComponent(query)}`;
+                    }
+                    
+                    auth.fetchWithAuth(url)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to search job offers');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Job search results:', data);
+                            const jobOffers = data.data || [];
+                            
+                            if (jobOffers.length > 0) {
+                                let html = '';
+                                jobOffers.forEach(job => {
+                                    html += `
+                                        <div class="job-card">
+                                            <h4 class="job-title">${job.title}</h4>
+                                            <p class="job-company">
+                                                <i class="bi bi-building me-1"></i> ${job.company ? job.company.name : 'Entreprise'}
+                                            </p>
+                                            <p class="job-location">
+                                                <i class="bi bi-geo-alt me-1"></i> ${job.location || 'Non spécifié'}
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="job-badge">${job.contractType || 'CDI'}</span>
+                                                    ${job.salary ? `<span class="job-badge">${job.salary}€</span>` : ''}
+                                                </div>
+                                                <a href="/view-job-offer.html?id=${job.id}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye me-1"></i> Voir l'offre
+                                                </a>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                resultsContainer.innerHTML = html;
+                            } else {
+                                resultsContainer.innerHTML = `
+                                    <div class="empty-state">
+                                        <i class="bi bi-search-heart"></i>
+                                        <p>Aucune offre d'emploi ne correspond à votre recherche.</p>
+                                    </div>
+                                `;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Job search error:', error);
+                            resultsContainer.innerHTML = `
+                                <div class="error-message">
+                                    <i class="bi bi-exclamation-triangle me-2"></i> ${error.message || 'Failed to search job offers'}
+                                </div>
+                            `;
+                        });
+                }
+
+                function getStatusClass(status) {
+                    switch(status) {
+                        case 'PENDING': return 'bg-warning text-dark';
+                        case 'REVIEWING': return 'bg-info text-white';
+                        case 'ACCEPTED': return 'bg-success text-white';
+                        case 'REJECTED': return 'bg-danger text-white';
+                        case 'WITHDRAWN': return 'bg-secondary text-white';
+                        default: return 'bg-secondary text-white';
+                    }
+                }
+
+                // Add event listeners for delete buttons after job offers are loaded
+                document.getElementById('job-offers-list').addEventListener('click', async function(event) {
+                    const target = event.target.closest('.delete-job-offer');
+                    if (target) {
+                        const jobOfferId = target.dataset.id;
+                        if (confirm('Êtes-vous sûr de vouloir supprimer cette offre d\'emploi ?')) {
+                            try {
+                                const response = await auth.fetchWithAuth(`/api/job-offers/${jobOfferId}`, {
+                                    method: 'DELETE'
+                                });
+
+                                if (response.ok) {
+                                    // Remove the job offer element from the DOM
+                                    target.closest('.list-group-item').remove();
+                                    alert('Offre d\'emploi supprimée avec succès!');
+                                    // Optionally, refresh stats or the list if needed
+                                    // fetchRecruiterStats();
+                                    // fetchJobOffers(); // Might be too heavy if many offers
+                                } else {
+                                    const errorData = await response.json();
+                                    alert('Erreur lors de la suppression de l\'offre: ' + (errorData.message || 'Une erreur est survenue'));
+                                }
+                            } catch (error) {
+                                console.error('Error deleting job offer:', error);
+                                alert('Une erreur est survenue lors de la suppression de l\'offre.');
+                            }
+                        }
+                    }
+                });
+
+                // Function to fetch and display all available job offers for candidates
+                function fetchAvailableJobOffers() {
+                    (async () => {
+                        console.log('Fetching all available job offers...');
+                        const availableJobOffersList = document.getElementById('available-job-offers-list');
+                        const availableJobOffersEmpty = document.getElementById('available-job-offers-empty');
+                        // Show loading spinner initially
+                        availableJobOffersList.innerHTML = `
+                            <div class="loading-spinner">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span class="ms-2">Chargement des offres d'emploi...</span>
+                            </div>
+                        `;
+                        availableJobOffersList.classList.add('loading-spinner');
+                        availableJobOffersList.classList.remove('hidden');
+                        availableJobOffersEmpty.classList.add('hidden');
+                        try {
+                            const response = await auth.fetchWithAuth('/api/job-offers/public');
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch available job offers');
+                            }
+                            const data = await response.json();
+                            console.log('Available job offers data:', data);
+                            let jobOffers = [];
+                            if (Array.isArray(data)) {
+                                jobOffers = data;
+                            } else if (data && Array.isArray(data.data)) {
+                                jobOffers = data.data;
+                            } else if (data && Array.isArray(data.jobOffers)) {
+                                jobOffers = data.jobOffers;
+                            }
+                            availableJobOffersList.innerHTML = '';
+                            console.log('Length of jobOffers (after check):', jobOffers.length);
+                            if (jobOffers.length > 0) {
+                                let html = '';
+                                console.log('Starting job offer rendering loop.');
+                                try {
+                                    jobOffers.forEach(job => {
+                                        try {
+                                            html += `
+                                            <div class="job-card">
+                                                <h4 class="job-title">${job.title}</h4>
+                                                <p class="job-company">
+                                                    <i class="bi bi-building me-1"></i> ${job.company ? job.company.name : 'Entreprise'}
+                                                </p>
+                                                <p class="job-location">
+                                                    <i class="bi bi-geo-alt me-1"></i> ${job.location || 'Non spécifié'}
+                                                </p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <span class="job-badge">${job.contractType || 'CDI'}</span>
+                                                        ${job.salary ? `<span class="job-badge">${job.salary}€</span>` : ''}
+                                                    </div>
+                                                    <div>
+                                                        <a href="/view-job-offer.html?id=${job.id}" class="btn btn-sm btn-primary">
+                                                            <i class="bi bi-eye me-1"></i> Voir l'offre
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-success apply-job-btn" data-id="${job.id}">
+                                                            <i class="bi bi-send me-1"></i> Postuler
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+                                        } catch (renderingError) {
+                                            console.error('Error rendering job offer:', job, renderingError);
+                                            html += `<div class="error-message">Error displaying job offer: ${job.title || 'Unknown'}</div>`;
+                                        }
+                                    });
+                                    availableJobOffersList.innerHTML = html;
+                                    availableJobOffersList.classList.remove('hidden');
+                                    availableJobOffersEmpty.classList.add('hidden');
+                                    availableJobOffersList.classList.remove('loading-spinner');
+                                } catch (error) {
+                                    console.error('Error during job offer rendering:', error);
+                                    availableJobOffersList.innerHTML = `<div class="error-message">Error displaying job offers. Please try again later.</div>`;
+                                }
+                                console.log('Finished job offer rendering loop and DOM update.');
+                            } else {
+                                availableJobOffersList.classList.add('hidden');
+                                availableJobOffersEmpty.classList.remove('hidden');
+                                availableJobOffersList.classList.remove('loading-spinner');
+                            }
+                        } catch (error) {
+                            console.error('Failed to fetch available job offers:', error);
+                            availableJobOffersList.classList.add('hidden');
+                            availableJobOffersEmpty.classList.add('hidden');
+                            availableJobOffersList.classList.remove('loading-spinner');
+                            document.getElementById('applications-list').innerHTML = `
+                                <div class="error-message">
+                                    <i class="bi bi-exclamation-triangle me-2"></i> ${error.message || 'Failed to load available job offers'}
+                                </div>
+                            `;
+                        }
+                        // Attache le listener après l'injection du HTML
+                        availableJobOffersList.onclick = async function(e) {
+                            const btn = e.target.closest('.apply-job-btn');
+                            if (btn) {
+                                e.preventDefault();
+                                const jobId = btn.getAttribute('data-id');
+                                console.log('Click Postuler for jobId:', jobId);
+                                if (confirm("Voulez-vous vraiment postuler à cette offre ?")) {
+                                    try {
+                                        const response = await auth.fetchWithAuth(`/api/candidate/apply/${jobId}`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ coverLetter: "" })
+                                        });
+                                        if (response.ok) {
+                                            alert("Votre candidature a été envoyée !");
+                                            fetchApplications();
+                                        } else {
+                                            const err = await response.json();
+                                            alert("Erreur: " + (err.message || "Impossible de postuler."));
+                                        }
+                                    } catch (error) {
+                                        alert("Erreur réseau: " + error.message);
+                                    }
+                                }
+                            }
+                        };
+                    })();
+                }
+            });
+        </script>
+    </th:block>
+<!-- Modal pour afficher les candidatures d'une offre -->
+<div id="recruiter-applications-modal" class="modal" tabindex="-1" style="display:none;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Candidatures pour <span id="modal-job-title"></span></h5>
+        <button type="button" class="btn-close" onclick="closeApplicationsModal()"></button>
+      </div>
+      <div class="modal-body" id="applications-modal-body">
+        <!-- Les candidatures seront injectées ici -->
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+window.showApplicationsForJobOffer = function(jobOfferId, jobTitle) {
+    document.getElementById('modal-job-title').textContent = jobTitle;
+    const modal = document.getElementById('recruiter-applications-modal');
+    modal.style.display = 'block';
+
+    auth.fetchWithAuth(`/api/recruiter/job-offers/${jobOfferId}/applications`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && Array.isArray(data.data)) {
+            let html = '<table class="table"><thead><tr><th>Candidat</th><th>Email</th><th>CV</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+            data.data.forEach(app => {
+                html += `<tr>
+                    <td>${app.candidate ? app.candidate.firstName + ' ' + app.candidate.lastName : ''}</td>
+                    <td>${app.candidate ? app.candidate.email : ''}</td>
+                    <td>${app.candidate && app.candidate.cvPath ? `<a href="${app.candidate.cvPath}" target="_blank" download>Télécharger</a>` : 'Aucun CV'}</td>
+                    <td><span class="badge ${getStatusClass(app.status)}">${app.status}</span></td>
+                    <td>
+                        ${app.status === 'PENDING' ? `
+                        <button class="btn btn-success btn-sm" onclick="updateApplicationStatus(${app.id}, 'ACCEPTED', ${jobOfferId}, '${jobTitle}')">Accepter</button>
+                        <button class="btn btn-danger btn-sm" onclick="updateApplicationStatus(${app.id}, 'REJECTED', ${jobOfferId}, '${jobTitle}')">Rejeter</button>
+                        ` : ''}
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('applications-modal-body').innerHTML = html;
+        } else {
+            document.getElementById('applications-modal-body').innerHTML = '<div class="alert alert-warning">Aucune candidature trouvée.</div>';
+        }
+    });
+};
+
+window.updateApplicationStatus = function(applicationId, status, jobOfferId, jobTitle) {
+    auth.fetchWithAuth(`/api/recruiter/applications/${applicationId}/status?status=${status}`, {
+        method: 'PUT',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Statut mis à jour !');
+            window.showApplicationsForJobOffer(jobOfferId, jobTitle); // Rafraîchir la liste
+        } else {
+            alert('Erreur : ' + (data.message || 'Impossible de changer le statut'));
+        }
+    });
+};
+
+window.closeApplicationsModal = function() {
+    document.getElementById('recruiter-applications-modal').style.display = 'none';
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Détails de l'offre</title>
+    <style>
+        .job-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .job-header {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .job-title {
+            font-size: 2rem;
+            color: #1a73e8;
+            margin-bottom: 1rem;
+        }
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .job-meta-item {
+            display: flex;
+            align-items: center;
+        }
+        .job-meta-item i {
+            margin-right: 0.5rem;
+            color: #1a73e8;
+        }
+        .job-content {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .section-title {
+            color: #1a73e8;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .tag {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .apply-section {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .loading-indicator, .error-message {
+            text-align: center;
+            padding: 3rem;
+        }
+        .error-message {
+            color: #d93025;
+            background-color: #fce8e6;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="job-container">
+            <div id="job-loading" class="loading-indicator">
+                <i class="bi bi-hourglass"></i> Chargement des détails de l'offre...
+            </div>
+            <div id="job-error" class="error-message" style="display: none;">
+                <i class="bi bi-exclamation-triangle"></i> Une erreur est survenue lors du chargement de l'offre.
+            </div>
+            <div id="job-details" style="display: none;">
+                <!-- Job details will be inserted here -->
+            </div>
+            
+            <!-- Application form for candidates -->
+            <div id="application-section" class="apply-section" th:if="${isAuthenticated and userRole == 'CANDIDATE'}" style="display: none;">
+                <h3 class="section-title">Postuler à cette offre</h3>
+                <form id="application-form">
+                    <div class="mb-3">
+                        <label for="cover-letter" class="form-label">Lettre de motivation</label>
+                        <textarea class="form-control" id="cover-letter" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Envoyer ma candidature
+                    </button>
+                </form>
+                <div id="application-result" style="display: none;"></div>
+            </div>
+            
+            <!-- Login prompt for unauthenticated users -->
+            <div class="apply-section" th:if="${!isAuthenticated}">
+                <div class="text-center py-3">
+                    <h4>Vous souhaitez postuler à cette offre ?</h4>
+                    <p>Connectez-vous ou inscrivez-vous pour postuler à cette offre d'emploi.</p>
+                    <div class="mt-3">
+                        <a href="/login" class="btn btn-primary me-2">Se connecter</a>
+                        <a href="/register" class="btn btn-outline-primary">S'inscrire</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth.js}"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Get job ID from Thymeleaf model
+                const jobId = /*[[${jobId}]]*/ '';
+                const isAuthenticated = /*[[${isAuthenticated}]]*/ false;
+                const userRole = /*[[${userRole}]]*/ '';
+                
+                console.log('Job ID:', jobId);
+                console.log('User authenticated:', isAuthenticated);
+                console.log('User role:', userRole);
+                
+                // Fetch job details
+                fetchJobDetails(jobId);
+                
+                // Initialize application form if user is a candidate
+                if (isAuthenticated && userRole === 'CANDIDATE') {
+                    initApplicationForm(jobId);
+                }
+            });
+            
+            function fetchJobDetails(jobId) {
+                const endpoint = `/api/public/job-offers/${jobId}`;
+                const fetchOptions = {};
+                
+                // Add auth token if available
+                if (window.auth && auth.getToken()) {
+                    fetchOptions.headers = {
+                        'Authorization': `Bearer ${auth.getToken()}`
+                    };
+                }
+                
+                fetch(endpoint, fetchOptions)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch job details');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success || !data.data) {
+                            throw new Error(data.message || 'Failed to load job details');
+                        }
+                        
+                        // Render job details
+                        renderJobDetails(data.data);
+                        
+                        // Hide loading indicator
+                        document.getElementById('job-loading').style.display = 'none';
+                        
+                        // Show job details and application section if present
+                        document.getElementById('job-details').style.display = 'block';
+                        const applicationSection = document.getElementById('application-section');
+                        if (applicationSection) {
+                            applicationSection.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching job details:', error);
+                        document.getElementById('job-loading').style.display = 'none';
+                        document.getElementById('job-error').style.display = 'block';
+                        document.getElementById('job-error').textContent = `Erreur: ${error.message || 'Impossible de charger les détails de l\'offre'}`;
+                    });
+            }
+            
+            function renderJobDetails(job) {
+                const detailsContainer = document.getElementById('job-details');
+                
+                // Format date
+                const createdDate = job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Date inconnue';
+                const expiryDate = job.expiresAt ? new Date(job.expiresAt).toLocaleDateString() : 'Non spécifiée';
+                
+                let html = `
+                    <div class="job-header">
+                        <h1 class="job-title">${job.title}</h1>
+                        <div class="job-meta">
+                            <div class="job-meta-item">
+                                <i class="bi bi-building"></i> ${job.company ? job.company.name : 'Entreprise'}
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="bi bi-geo-alt"></i> ${job.location || 'Remote'}
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="bi bi-briefcase"></i> ${job.contractType || 'Type de contrat non spécifié'}
+                            </div>
+                            ${job.salary ? `<div class="job-meta-item"><i class="bi bi-currency-euro"></i> ${job.salary}</div>` : ''}
+                        </div>
+                        <div class="job-meta">
+                            <div class="job-meta-item">
+                                <i class="bi bi-calendar"></i> Publiée le: ${createdDate}
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="bi bi-calendar-x"></i> Date limite: ${expiryDate}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="job-content">
+                        <h3 class="section-title">Description du poste</h3>
+                        <div>${job.description || 'Aucune description disponible.'}</div>
+                        
+                        ${job.requiredSkills && job.requiredSkills.length > 0 ? `
+                            <h3 class="section-title mt-4">Compétences requises</h3>
+                            <div class="tag-list">
+                                ${job.requiredSkills.map(skill => `<span class="tag">${skill}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${job.responsibilities && job.responsibilities.length > 0 ? `
+                            <h3 class="section-title mt-4">Responsabilités</h3>
+                            <ul>
+                                ${job.responsibilities.map(responsibility => `<li>${responsibility}</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `;
+                
+                detailsContainer.innerHTML = html;
+            }
+            
+            function initApplicationForm(jobId) {
+                const applicationForm = document.getElementById('application-form');
+                const resultDiv = document.getElementById('application-result');
+                
+                applicationForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const coverLetter = document.getElementById('cover-letter').value;
+                    
+                    if (!coverLetter) {
+                        showApplicationResult('error', 'Veuillez saisir une lettre de motivation.');
+                        return;
+                    }
+                    
+                    // Disable form during submission
+                    const submitButton = applicationForm.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="bi bi-hourglass"></i> Envoi en cours...';
+                    
+                    // Prepare application data
+                    const applicationData = {
+                        coverLetter: coverLetter
+                    };
+                    
+                    // Submit application
+                    auth.fetchWithAuth(`/api/candidate/apply/${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(applicationData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Failed to submit application');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Clear form
+                            applicationForm.reset();
+                            
+                            // Show success message
+                            showApplicationResult('success', 'Votre candidature a été envoyée avec succès !');
+                            
+                            // Hide form after successful submission
+                            applicationForm.style.display = 'none';
+                        } else {
+                            throw new Error(data.message || 'Failed to submit application');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Application submission error:', error);
+                        showApplicationResult('error', `Erreur: ${error.message}`);
+                    })
+                    .finally(() => {
+                        // Re-enable form
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="bi bi-send"></i> Envoyer ma candidature';
+                    });
+                });
+                
+                function showApplicationResult(type, message) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-${type === 'success' ? 'success' : 'danger'} mt-3">
+                            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
+                        </div>
+                    `;
+                    resultDiv.style.display = 'block';
+                }
+            }
+        </script>
+    </th:block>
+</body>
+</html> 
